@@ -21,7 +21,7 @@ export const site = {
   contact: {
     email: 'hello@leveleight.co.tz',
     phone: '+255 000 000 000',
-    phoneHref: '+255000000000',
+    phoneHref: '+255 767 234 645',
     addressLines: ['Dar es Salaam', 'Tanzania'],
     hours: 'Mon–Fri, 08:00 – 17:00 EAT',
     isPlaceholder: true,
