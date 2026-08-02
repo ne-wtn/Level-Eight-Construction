@@ -1,0 +1,230 @@
+@import 'tailwindcss';
+
+/* Self-hosted variable fonts — no external CDN request.
+   Archivo carries a width axis (62%–125%) used for the industrial display type. */
+@import '@fontsource-variable/archivo/wdth.css';
+@import '@fontsource-variable/instrument-sans/wght.css';
+
+@theme {
+  /* ---- Palette -------------------------------------------------------
+     Warm concrete + safety orange. Deliberately not pure black/white:
+     the paper is warm, the greys are aggregate-toned, the accent is the
+     colour of site PPE. */
+  --color-ink: #0b0b0c;
+  --color-ink-soft: #16161a;
+  --color-ink-line: #26262b;
+
+  --color-paper: #faf8f4;
+  --color-surface: #efece4;
+  --color-surface-dim: #e2ded3;
+  --color-line: #d6d1c4;
+
+  --color-muted: #6c6a63;
+  --color-muted-dark: #94918a;
+
+  --color-accent: #f0562b;
+  --color-accent-dark: #d4441d;
+  --color-accent-tint: #fdeee8;
+
+  /* ---- Type ---------------------------------------------------------- */
+  --font-display: 'Archivo Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
+
+  /* Fluid display scale. Line-heights are deliberately sub-1 at the top
+     end so two-line headlines lock together as a block. */
+  --text-hero: clamp(2.75rem, 7.5vw, 6.5rem);
+  --text-hero--line-height: 0.92;
+  --text-hero--letter-spacing: -0.035em;
+
+  --text-display: clamp(2.25rem, 5vw, 4rem);
+  --text-display--line-height: 0.96;
+  --text-display--letter-spacing: -0.03em;
+
+  --text-title: clamp(1.75rem, 3vw, 2.5rem);
+  --text-title--line-height: 1.05;
+  --text-title--letter-spacing: -0.02em;
+
+  --text-lead: clamp(1.0625rem, 1.4vw, 1.25rem);
+  --text-lead--line-height: 1.55;
+
+  /* ---- Motion --------------------------------------------------------- */
+  --animate-marquee: marquee 38s linear infinite;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    border-color: var(--color-line);
+  }
+
+  /* This is a committed light design — there is no dark variant. Declaring that
+     keeps form controls, scrollbars and text-selection in light UA styling when
+     the OS is set to dark.
+
+     It does NOT stop Chrome's "Darken websites" setting (Auto Dark Mode) from
+     re-tinting the page — verified on a real device: with that setting on, the
+     paper background still renders brown. Declaring `light` arguably marks the
+     page as exactly the kind of light-only site that feature targets. The only
+     site-side escape is to genuinely support dark (`light dark` plus real dark
+     styles); otherwise it is the visitor's own browser preference and outside
+     our control. */
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* One consistent, high-contrast focus treatment everywhere. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: #fff;
+  }
+
+  /* Honour the OS setting: kill every transition, animation and smooth scroll. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Signature component: the notched card.
+
+   The card keeps its own radius; the arrow button that sits in the
+   bottom-right corner wears a thick ring of the *surrounding* colour,
+   which reads as a bite taken out of the card. `--notch-bg` must be set
+   to whatever sits behind the card.
+   --------------------------------------------------------------------- */
+@utility notch-host {
+  position: relative;
+  --notch-bg: var(--color-paper);
+}
+
+@utility notch-action {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  box-shadow: 0 0 0 0.75rem var(--notch-bg);
+}
+
+/* Architectural hairline grid — the drawing-sheet texture behind sections. */
+@utility blueprint {
+  background-image: linear-gradient(
+      to right,
+      color-mix(in srgb, var(--color-line) 55%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-line) 55%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 4rem 4rem;
+}
+
+@utility blueprint-dark {
+  background-image: linear-gradient(to right, var(--color-ink-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-ink-line) 1px, transparent 1px);
+  background-size: 4rem 4rem;
+}
+
+/* Fine film grain so large flat fields don't read as dead vector colour. */
+@utility grain {
+  position: relative;
+}
+@utility grain-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.32'/%3E%3C/svg%3E");
+}
+
+/* Small label used for section eyebrows, step numbers and figures.
+   Set in Archivo rather than a separate mono face: at 11px uppercase it needs
+   weight 600 to hold its colour, and tabular figures keep the numeric uses
+   (lightbox counter, step numbers, testimonial indices) from jittering. */
+@utility label {
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Display type set on the width axis — condensed for dense headlines. */
+@utility display-tight {
+  font-family: var(--font-display);
+  font-stretch: 92%;
+}
+
+@utility display-wide {
+  font-family: var(--font-display);
+  font-stretch: 112%;
+}
+
+@utility shell {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 84rem;
+  padding-inline: 1.25rem;
+  @media (width >= 48rem) {
+    padding-inline: 2rem;
+  }
+  @media (width >= 80rem) {
+    padding-inline: 2.5rem;
+  }
+}
