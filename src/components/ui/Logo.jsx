@@ -40,7 +40,7 @@ export function Wordmark({ className = '' }) {
 
 export default function Logo({ className = '', markClassName }) {
   return (
-    <span className={`inline-flex items-center gap-2.5 ${className}`}>
+    <span className={`inline-flex items-center gap-2.5 translate-y-0.5 ${className}`}>
       <LogoMark className={markClassName ?? 'h-6 w-6 shrink-0'} />
       <Wordmark />
     </span>
