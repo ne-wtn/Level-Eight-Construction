@@ -1,11 +1,22 @@
 import { useId, useRef, useState } from 'react'
-import { AlertCircle, Check, ChevronDown, Loader2 } from 'lucide-react'
+import { AlertCircle, Check, Loader2 } from 'lucide-react'
 import { services } from '../../data/services'
 import Button from '../../components/ui/Button'
+import Select from '../../components/ui/Select'
 
 const ENDPOINT = import.meta.env.VITE_CONTACT_ENDPOINT
 
 const EMPTY = { name: '', email: '', phone: '', service: '', message: '' }
+
+/** The three services, numbered as they are on the services page, plus a catch-all. */
+const SERVICE_OPTIONS = [
+  ...services.map((service) => ({
+    value: service.name,
+    label: service.name,
+    number: service.number,
+  })),
+  { value: 'Other', label: 'Other' },
+]
 
 /**
  * Field-level rules. Phone is optional, but validated when supplied — the
@@ -40,8 +51,7 @@ export default function ContactForm() {
   const honeypotRef = useRef(null)
   const summaryRef = useRef(null)
 
-  const setField = (field) => (event) => {
-    const value = event.target.value
+  const commit = (field, value) => {
     setValues((prev) => ({ ...prev, [field]: value }))
     // Only re-validate live once a field has been blurred, so we aren't
     // shouting at someone halfway through typing their email.
@@ -49,6 +59,12 @@ export default function ContactForm() {
       setErrors((prev) => ({ ...prev, [field]: validators[field](value) }))
     }
   }
+
+  /** For native inputs, which hand back an event. */
+  const setField = (field) => (event) => commit(field, event.target.value)
+
+  /** For the custom Select, which hands back the value directly. */
+  const setValue = (field) => (value) => commit(field, value)
 
   const handleBlur = (field) => () => {
     setTouched((prev) => ({ ...prev, [field]: true }))
@@ -200,23 +216,20 @@ export default function ContactForm() {
           autoComplete="tel"
           placeholder="+255 000 000 000"
         />
-        <Field
-          id={`${formId}-service`}
-          label="Service interest"
-          as="select"
-          value={values.service}
-          error={errors.service}
-          onChange={setField('service')}
-          onBlur={handleBlur('service')}
-          required
-        >
-          <option value="">Select a service…</option>
-          {services.map((service) => (
-            <option key={service.id} value={service.name}>
-              {service.name}
-            </option>
-          ))}
-          <option value="Other">Other</option>
+        <Field id={`${formId}-service`} label="Service interest" error={errors.service}>
+          {({ id, invalid, labelledBy, describedBy }) => (
+            <Select
+              id={id}
+              value={values.service}
+              onChange={setValue('service')}
+              onBlur={handleBlur('service')}
+              options={SERVICE_OPTIONS}
+              placeholder="Select a service…"
+              invalid={invalid}
+              labelledBy={labelledBy}
+              describedBy={describedBy}
+            />
+          )}
         </Field>
         <Field
           id={`${formId}-message`}
@@ -263,7 +276,13 @@ export default function ContactForm() {
   )
 }
 
-/** One labelled control, wired to its own error message. */
+/**
+ * One labelled control, wired to its own error message.
+ *
+ * Pass `children` as a function to supply a custom control (the service
+ * dropdown does this) — it still inherits the label association, the invalid
+ * state and the error's `aria-describedby`.
+ */
 function Field({
   id,
   label,
@@ -276,7 +295,9 @@ function Field({
 }) {
   const Tag = as
   const errorId = `${id}-error`
+  const labelId = `${id}-label`
   const invalid = Boolean(error)
+  const custom = typeof children === 'function'
 
   const control =
     'w-full rounded-2xl border bg-paper px-4 py-3.5 text-[0.9375rem] text-ink ' +
@@ -285,32 +306,35 @@ function Field({
 
   return (
     <div className={className}>
-      <label htmlFor={id} className="label mb-2.5 flex items-baseline gap-2 text-muted">
+      {/* A custom control is a button, not a labelable element, so it gets an
+          id-based association instead of htmlFor. */}
+      <label
+        id={labelId}
+        htmlFor={custom ? undefined : id}
+        className="label mb-2.5 flex items-baseline gap-2 text-muted"
+      >
         {label}
         {optional && <span className="normal-case opacity-60">(optional)</span>}
       </label>
 
-      {/* The select drops the native arrow so it matches the inputs, so it has
-          to draw its own — without one it doesn't read as a dropdown at all. */}
-      <div className={as === 'select' ? 'relative' : undefined}>
+      {custom ? (
+        children({
+          id,
+          invalid,
+          labelledBy: labelId,
+          describedBy: invalid ? errorId : undefined,
+        })
+      ) : (
         <Tag
           id={id}
           aria-invalid={invalid || undefined}
           aria-describedby={invalid ? errorId : undefined}
-          className={`${control} ${as === 'textarea' ? 'resize-y' : ''} ${
-            as === 'select' ? 'cursor-pointer appearance-none pr-11' : ''
-          }`}
+          className={`${control} ${as === 'textarea' ? 'resize-y' : ''}`}
           {...props}
         >
           {children}
         </Tag>
-        {as === 'select' && (
-          <ChevronDown
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 text-muted"
-          />
-        )}
-      </div>
+      )}
 
       {invalid && (
         <p id={errorId} className="mt-2 flex items-center gap-1.5 text-xs text-accent-dark">

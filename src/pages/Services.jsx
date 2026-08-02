@@ -12,7 +12,7 @@ import usePageTitle from '../hooks/usePageTitle'
 
 export default function Services() {
   usePageTitle(
-    'Services — Level Eight',
+    'Services - Level Eight',
     'Construction, renovation and finishes, and full project management across Tanzania. What each service includes, what you receive, and who it suits.',
   )
 
